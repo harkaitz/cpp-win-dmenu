@@ -3,9 +3,8 @@
 .PHONY: all clean install check
 
 PROJECT  =dmenu
-VERSION  =dmenu-win-1.0.0
+VERSION  =1.0.0
 
-PROGS      =dmenu.exe
 PREFIX     =/usr/local
 TOOLCHAINS =x86_64-w64-mingw32
 TPREFIX    =x86_64-w64-mingw32-
@@ -14,9 +13,12 @@ CXX            =$(TPREFIX)g++
 CXXFLAGS       =-Wall -g3
 CXXFLAGS_DMENU =-static -static-libgcc -static-libstdc++ -DUNICODE 
 LIBS           =-lgdi32
+BUILDDIR      ?=.
 
 CXXFLAGS_DMENU += -DPROGRAM_NAME=L\"$(PROJECT)\"
-CXXFLAGS_DMENU += -DPROGRAM_VERSION=\"$(VERSION)\"
+CXXFLAGS_DMENU += -DPROGRAM_VERSION=\"dmenu-win-$(VERSION)\"
+
+PROGS      =$(BUILDDIR)/dmenu.exe
 
 all: $(PROGS)
 clean:
@@ -26,5 +28,9 @@ install:
 	install -c -m 755 $(PROGS) $(DESTDIR)$(PREFIX)/bin
 check:
 
-dmenu.exe: dmenu.cpp config.h
+$(BUILDDIR)/dmenu.exe: dmenu.cpp config.h
 	$(CXX) -o $@ dmenu.cpp $(CXXFLAGS) $(CXXFLAGS_DMENU) $(LDFLAGS) $(LIBS)
+
+release:
+	hrelease -t "$(TOOLCHAINS)" -N $(PROJECT) -R $(VERSION) -o $(BUILDDIR)/Release
+	gh release create v$(VERSION) $$(cat $(BUILDDIR)/Release)
